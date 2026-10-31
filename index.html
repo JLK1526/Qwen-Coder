@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>YKW获取</title>
+<style>
+  :root {
+    --radius: 16px;
+    --gap: 24px;
+    --transition: 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* ===== 深色模式（默认）：#CBBACC -> #32580B ===== */
+  html[data-theme="dark"] {
+    background: linear-gradient(135deg, #CBBACC 0%, #32580B 100%);
+    color: #f5f2ea;
+
+    --title-color: #fdfbf5;
+    --subtitle-color: rgba(253, 251, 245, 0.78);
+    --big-box-bg: rgba(255, 255, 255, 0.10);
+    --big-box-border: rgba(255, 255, 255, 0.22);
+    --small-box-bg: rgba(20, 30, 8, 0.28);
+    --small-box-border: rgba(255, 255, 255, 0.18);
+    --label-color: #f2eede;
+    --input-bg: rgba(255, 255, 255, 0.92);
+    --input-color: #2b3a17;
+    --placeholder-color: #8a937d;
+    --input-focus-ring: rgba(203, 186, 204, 0.55);
+    --btn-bg: rgba(255, 255, 255, 0.16);
+    --btn-border: rgba(255, 255, 255, 0.32);
+    --btn-color: #fdfbf5;
+    --btn-hover-bg: rgba(255, 255, 255, 0.28);
+    --submit-bg: #e9e2d6;
+    --submit-color: #2b3a17;
+    --submit-hover-bg: #ffffff;
+    --shadow: 0 12px 32px rgba(0, 0, 0, 0.25);
+  }
+
+  /* ===== 浅色模式：#FFF1EB -> #ACE0F9 ===== */
+  html[data-theme="light"] {
+    background: linear-gradient(135deg, #FFF1EB 0%, #ACE0F9 100%);
+    color: #333a45;
+
+    --title-color: #2c3440;
+    --subtitle-color: rgba(44, 52, 64, 0.68);
+    --big-box-bg: rgba(255, 255, 255, 0.55);
+    --big-box-border: rgba(44, 52, 64, 0.12);
+    --small-box-bg: rgba(255, 255, 255, 0.72);
+    --small-box-border: rgba(44, 52, 64, 0.10);
+    --label-color: #2c3440;
+    --input-bg: rgba(255, 255, 255, 0.95);
+    --input-color: #2c3440;
+    --placeholder-color: #9aa4b1;
+    --input-focus-ring: rgba(120, 180, 220, 0.45);
+    --btn-bg: rgba(255, 255, 255, 0.7);
+    --btn-border: rgba(44, 52, 64, 0.18);
+    --btn-color: #2c3440;
+    --btn-hover-bg: rgba(255, 255, 255, 0.95);
+    --submit-bg: #2c3440;
+    --submit-color: #ffffff;
+    --submit-hover-bg: #45505f;
+    --shadow: 0 12px 32px rgba(80, 100, 130, 0.16);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body { height: 100%; }
+
+  body {
+    min-height: 100vh;
+    font-family: "PingFang SC", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+    transition: background var(--transition), color var(--transition);
+  }
+
+  /* ===== 右上角主题切换按钮 ===== */
+  .theme-toggle {
+    position: fixed;
+    top: 20px;
+    right: 24px;
+    z-index: 10;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 18px;
+    font-size: 14px;
+    border-radius: 999px;
+    border: 1px solid var(--btn-border);
+    background: var(--btn-bg);
+    color: var(--btn-color);
+    cursor: pointer;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    transition: background var(--transition), color var(--transition),
+                border-color var(--transition), transform 0.15s ease;
+  }
+  .theme-toggle:hover { background: var(--btn-hover-bg); transform: translateY(-1px); }
+  .theme-toggle:active { transform: translateY(0); }
+  .theme-toggle .icon { font-size: 16px; line-height: 1; }
+
+  /* ===== 主容器 ===== */
+  .container {
+    width: 100%;
+    max-width: 560px;
+    text-align: center;
+  }
+
+  .title {
+    font-size: 44px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    color: var(--title-color);
+    transition: color var(--transition);
+  }
+
+  .subtitle {
+    margin-top: 12px;
+    font-size: 17px;
+    color: var(--subtitle-color);
+    transition: color var(--transition);
+  }
+
+  /* 副标题与大框之间的间隔 */
+  .big-box {
+    margin-top: 64px;
+    padding: var(--gap);
+    border-radius: var(--radius);
+    background: var(--big-box-bg);
+    border: 1px solid var(--big-box-border);
+    box-shadow: var(--shadow);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    transition: background var(--transition), border-color var(--transition),
+                box-shadow var(--transition);
+  }
+
+  .small-box {
+    text-align: left;
+    padding: 18px 20px;
+    border-radius: 12px;
+    background: var(--small-box-bg);
+    border: 1px solid var(--small-box-border);
+    transition: background var(--transition), border-color var(--transition);
+  }
+
+  .small-box label {
+    display: block;
+    margin-bottom: 10px;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--label-color);
+    transition: color var(--transition);
+  }
+
+  .small-box input {
+    width: 100%;
+    padding: 12px 14px;
+    font-size: 14px;
+    border-radius: 8px;
+    border: 1px solid transparent;
+    background: var(--input-bg);
+    color: var(--input-color);
+    outline: none;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease,
+                background var(--transition), color var(--transition);
+  }
+  .small-box input::placeholder { color: var(--placeholder-color); }
+  .small-box input:focus {
+    border-color: var(--input-focus-ring);
+    box-shadow: 0 0 0 3px var(--input-focus-ring);
+  }
+
+  /* 卡密格式错误提示样式 */
+  .small-box input.invalid {
+    border-color: #e5484d;
+    box-shadow: 0 0 0 3px rgba(229, 72, 77, 0.28);
+  }
+  .error-msg {
+    margin-top: 8px;
+    font-size: 13px;
+    color: #e5484d;
+  }
+
+  .submit-btn {
+    margin-top: 4px;
+    padding: 14px 20px;
+    font-size: 16px;
+    font-weight: 600;
+    border: none;
+    border-radius: 12px;
+    background: var(--submit-bg);
+    color: var(--submit-color);
+    cursor: pointer;
+    transition: background 0.2s ease, transform 0.15s ease,
+                color var(--transition);
+  }
+  .submit-btn:hover { background: var(--submit-hover-bg); transform: translateY(-1px); }
+  .submit-btn:active { transform: translateY(0); }
+
+  @media (max-width: 480px) {
+    .title { font-size: 34px; }
+    .big-box { margin-top: 48px; }
+    .theme-toggle { top: 14px; right: 14px; padding: 8px 14px; }
+  }
+</style>
+</head>
+<body>
+
+  <!-- 右上角深浅色切换按钮 -->
+  <button class="theme-toggle" id="themeToggle" aria-label="切换深浅色模式">
+    <span class="icon" id="themeIcon">🌙</span>
+    <span id="themeText">浅色模式</span>
+  </button>
+
+  <div class="container">
+    <h1 class="title">YKW获取</h1>
+    <p class="subtitle">在线获取YKW</p>
+
+    <!-- 大框包住两个小框 -->
+    <div class="big-box">
+      <div class="small-box">
+        <label for="kami">卡密</label>
+        <input type="text" id="kami" placeholder="请输入卡密，如：JLK-YKW-XXXX-XXXX-XXXX" autocomplete="off" />
+        <p class="error-msg" id="kamiError" style="display:none;">卡密格式错误</p>
+      </div>
+
+      <div class="small-box">
+        <label for="code">校验码</label>
+        <input type="text" id="code" inputmode="numeric" placeholder="请输入校验码，每个校验码只能使用1次，如：XXXXXX" autocomplete="off" />
+        <p class="error-msg" id="codeError" style="display:none;">校验码格式错误</p>
+      </div>
+
+      <button class="submit-btn" id="submitBtn">获取 YKW</button>
+    </div>
+  </div>
+
+<script>
+  const root = document.documentElement;
+  const toggleBtn = document.getElementById('themeToggle');
+  const themeIcon = document.getElementById('themeIcon');
+  const themeText = document.getElementById('themeText');
+
+  function applyTheme(theme) {
+    root.setAttribute('data-theme', theme);
+    if (theme === 'dark') {
+      themeIcon.textContent = '🌙';
+      themeText.textContent = '浅色模式';
+    } else {
+      themeIcon.textContent = '☀️';
+      themeText.textContent = '深色模式';
+    }
+    try { localStorage.setItem('ykw-theme', theme); } catch (e) {}
+  }
+
+  // 默认为深色；若之前有保存的偏好则恢复
+  let saved = null;
+  try { saved = localStorage.getItem('ykw-theme'); } catch (e) {}
+  applyTheme(saved === 'light' ? 'light' : 'dark');
+
+  toggleBtn.addEventListener('click', () => {
+    const next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+    applyTheme(next);
+  });
+
+  /* ===================================================================
+   * ★★★ 配置区：要修改卡密 / 校验码 / 跳转地址，只改下面 3 行即可 ★★★
+   *  - VALID_KAMI   : 唯一有效卡密，必须满足格式 JLK-YKW-XXXX-XXXX-XXXX
+   *                   （XXXX 为 4 位字母或数字，区分大小写）
+   *  - VALID_CODES  : 有效校验码数组，每项必须是「6 位纯数字」字符串，
+   *                   多个用逗号分隔，例如 ['000104', '123456']
+   *  - REDIRECT_URL : 校验通过后跳转的网址
+   * =================================================================== */
+  const VALID_KAMI = 'JLK-YKW-aQmZ-TpRv-NcXs';
+  // 有效校验码：均为 6 位纯数字（000104、001526 已补齐为 6 位以符合格式要求）
+  const VALID_CODES = ['000104', '001526', '778891'];
+  const REDIRECT_URL = 'https://zh.minecraft.wiki/';
+
+  // 卡密格式：JLK-YKW-XXXX-XXXX-XXXX（前缀固定，后面三段各 4 位字母或数字）
+  const KAMI_PATTERN = /^JLK-YKW-[A-Za-z0-9]{4}-[A-Za-z0-9]{4}-[A-Za-z0-9]{4}$/;
+
+  function isValidKamiFormat(kami) {
+    return KAMI_PATTERN.test(kami);
+  }
+
+  const kamiInput = document.getElementById('kami');
+  const kamiError = document.getElementById('kamiError');
+
+  // 实时检测卡密格式：不符则标红输入框并显示“卡密格式错误”
+  function checkKamiFormat() {
+    const value = kamiInput.value.trim();
+    if (!value) { // 为空时不提示格式错误（由提交时的“请输入卡密”负责）
+      kamiInput.classList.remove('invalid');
+      kamiError.style.display = 'none';
+      kamiError.textContent = '';
+      return false;
+    }
+    const ok = isValidKamiFormat(value);
+    kamiInput.classList.toggle('invalid', !ok);
+    kamiError.textContent = ok ? '' : '卡密格式错误';
+    kamiError.style.display = ok ? 'none' : 'block';
+    return ok;
+  }
+
+  kamiInput.addEventListener('input', checkKamiFormat);
+  kamiInput.addEventListener('blur', checkKamiFormat);
+
+  // 校验码格式：必须是 6 位纯数字
+  const CODE_PATTERN = /^\d{6}$/;
+
+  function isValidCodeFormat(code) {
+    return CODE_PATTERN.test(code);
+  }
+
+  const codeInput = document.getElementById('code');
+  const codeError = document.getElementById('codeError');
+
+  // 实时检测校验码格式：不符则标红输入框并显示“校验码格式错误”
+  function checkCodeFormat() {
+    const value = codeInput.value.trim();
+    if (!value) { // 为空时不提示格式错误（由提交时的“请输入校验码”负责）
+      codeInput.classList.remove('invalid');
+      codeError.style.display = 'none';
+      codeError.textContent = '';
+      return false;
+    }
+    const ok = isValidCodeFormat(value);
+    codeInput.classList.toggle('invalid', !ok);
+    codeError.textContent = ok ? '' : '校验码格式错误';
+    codeError.style.display = ok ? 'none' : 'block';
+    return ok;
+  }
+
+  // 只允许输入数字（最多 6 位；粘贴/输入时自动剔除空格等非法字符）
+  codeInput.addEventListener('input', () => {
+    const cleaned = codeInput.value.replace(/\s/g, '').replace(/\D/g, '').slice(0, 6);
+    if (cleaned !== codeInput.value) codeInput.value = cleaned;
+  });
+
+  codeInput.addEventListener('input', checkCodeFormat);
+  codeInput.addEventListener('blur', () => {
+    // 失焦时去掉首尾空格，避免“看起来填了但提交无反应”
+    const trimmed = codeInput.value.trim();
+    if (trimmed !== codeInput.value) codeInput.value = trimmed;
+    checkCodeFormat();
+  });
+
+  // 提交校验：空值 -> 卡密格式 -> 校验码格式 -> 是否匹配
+  function doSubmit() {
+    const kami = kamiInput.value.trim();
+    const code = codeInput.value.replace(/\s/g, ''); // 去除所有空白，容忍误粘贴的空格
+    if (!kami) { alert('请输入卡密'); kamiInput.focus(); return; }
+    if (!isValidKamiFormat(kami)) {
+      alert('卡密格式错误');
+      checkKamiFormat();
+      kamiInput.focus();
+      return;
+    }
+    if (!code) { alert('请输入校验码'); codeInput.focus(); return; }
+    if (!isValidCodeFormat(code)) {
+      alert('校验码格式错误');
+      checkCodeFormat();
+      codeInput.focus();
+      return;
+    }
+    if (kami === VALID_KAMI && VALID_CODES.includes(code)) {
+      window.location.href = REDIRECT_URL;
+    } else {
+      alert('卡密或校验码错误，请检查后重试');
+    }
+  }
+
+  document.getElementById('submitBtn').addEventListener('click', doSubmit);
+
+  // 在输入框中按回车等同于点击“获取 YKW”按钮
+  kamiInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); doSubmit(); } });
+  codeInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); doSubmit(); } });
+</script>
+</body>
+</html>
