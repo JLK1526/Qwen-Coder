@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>YKW获取</title>
+<title>KeyVault - YKW Key Retrieval</title>
 <style>
   :root {
     --radius: 16px;
@@ -270,17 +270,59 @@
   });
 
   /* ===================================================================
-   * ★★★ 配置区：要修改卡密 / 校验码 / 跳转地址，只改下面 3 行即可 ★★★
-   *  - VALID_KAMI   : 唯一有效卡密，必须满足格式 JLK-YKW-XXXX-XXXX-XXXX
-   *                   （XXXX 为 4 位字母或数字，区分大小写）
-   *  - VALID_CODES  : 有效校验码数组，每项必须是「6 位纯数字」字符串，
-   *                   多个用逗号分隔，例如 ['000104', '123456']
-   *  - REDIRECT_URL : 校验通过后跳转的网址
+   * ★★★ 配置区：要修改卡密 / 校验码 / 跳转地址，只改下面几行即可 ★★★
+   *  - VALID_KAMI_LIST : 有效卡密数组，每个必须满足格式
+   *                      JLK-YKW-XXXX-XXXX-XXXX（XXXX 为 4 位字母或数字，
+   *                      区分大小写），多个用逗号分隔
+   *  - ALL_CODES       : 全部初始有效校验码数组，每项必须是「6 位纯数字」
+   *                      字符串，多个用逗号分隔，例如 ['000104', '123456']
+   *                    ※ 校验码一经成功使用会被永久作废（见下方“一次性”逻辑）
+   *  - REDIRECT_URL    : 校验通过后跳转的网址
    * =================================================================== */
-  const VALID_KAMI = 'JLK-YKW-aQmZ-TpRv-NcXs';
-  // 有效校验码：均为 6 位纯数字（000104、001526 已补齐为 6 位以符合格式要求）
-  const VALID_CODES = ['000104', '001526', '778891'];
+  const VALID_KAMI_LIST = [
+    'JLK-YKW-aQmZ-TpRv-NcXs',
+    'JLK-YKW-pQmZ-TvRn-XcKs',
+    'JLK-YKW-aBdF-HjKl-MnPq'
+  ];
+  // 有效校验码：均为 6 位纯数字
+  const ALL_CODES = [
+    '000104', '001526', '482913',
+    '483920', '157364', '902815', '736451', '284093',
+    '651728', '319576', '870142', '245839', '593607'
+  ];
   const REDIRECT_URL = 'https://zh.minecraft.wiki/';
+
+  /* -------------------------------------------------------------------
+   * 一次性校验码逻辑：
+   *  - USED_KEY : localStorage 中记录“已被使用过的校验码”的键名
+   *  - 每次卡密 + 校验码匹配成功（即将跳转）时，把该校验码写入已用列表；
+   *  - 之后再次提交同一个校验码会因不在可用列表中而失败。
+   *  ※ 注意：这是纯前端实现，用户清除浏览器数据后即可重置；
+   *    如需真正防重用，必须由后端记录使用情况。
+   * ------------------------------------------------------------------- */
+  const USED_KEY = 'ykw_used_codes';
+
+  function getUsedCodes() {
+    try {
+      const raw = localStorage.getItem(USED_KEY);
+      const arr = raw ? JSON.parse(raw) : [];
+      return Array.isArray(arr) ? arr : [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  function markCodeUsed(code) {
+    const used = getUsedCodes();
+    if (!used.includes(code)) {
+      used.push(code);
+      try { localStorage.setItem(USED_KEY, JSON.stringify(used)); } catch (e) {}
+    }
+  }
+
+  function isCodeAvailable(code) {
+    return ALL_CODES.includes(code) && !getUsedCodes().includes(code);
+  }
 
   // 卡密格式：JLK-YKW-XXXX-XXXX-XXXX（前缀固定，后面三段各 4 位字母或数字）
   const KAMI_PATTERN = /^JLK-YKW-[A-Za-z0-9]{4}-[A-Za-z0-9]{4}-[A-Za-z0-9]{4}$/;
@@ -369,8 +411,14 @@
       codeInput.focus();
       return;
     }
-    if (kami === VALID_KAMI && VALID_CODES.includes(code)) {
+    if (VALID_KAMI_LIST.includes(kami) && isCodeAvailable(code)) {
+      // 获取成功：先把本次使用的校验码标记为“已使用”，再跳转，
+      // 保证该校验码无法被二次使用
+      markCodeUsed(code);
       window.location.href = REDIRECT_URL;
+    } else if (VALID_KAMI_LIST.includes(kami) && ALL_CODES.includes(code)) {
+      // 卡密正确、校验码存在但已被使用过
+      alert('该校验码已被使用，不能二次使用');
     } else {
       alert('卡密或校验码错误，请检查后重试');
     }
